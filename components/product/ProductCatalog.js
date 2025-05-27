@@ -16,12 +16,15 @@ export default function ProductCatalog() {
   const [products, setProducts] = useState([]);
   const [message, setMessage] = useState("");
 
+  // New: State to hold selected provider per product
+  const [selectedProviders, setSelectedProviders] = useState({});
+
   // Fetch existing products on component mount
   useEffect(() => {
     const fetchProducts = async () => {
       try {
         const querySnapshot = await getDocs(collection(db, "products"));
-        const productsList = querySnapshot.docs.map(doc => ({
+        const productsList = querySnapshot.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
         }));
@@ -47,11 +50,14 @@ export default function ProductCatalog() {
       setPrice("");
 
       // Update products list after adding new product
-      setProducts(prev => [...prev, {
-        id: docRef.id,
-        productName,
-        price: price.trim(),
-      }]);
+      setProducts((prev) => [
+        ...prev,
+        {
+          id: docRef.id,
+          productName,
+          price: price.trim(),
+        },
+      ]);
     } catch (e) {
       setMessage("Error: " + e.message);
     }
@@ -63,17 +69,34 @@ export default function ProductCatalog() {
   };
 
   // Generate payment link and save to Firestore
-  const generatePaymentLink = async (productId, productName, price) => {
-    const paymentLink = `https://pay.example.com/product/${productId}?token=${generateRandomToken()}`;
+  // Now includes provider as parameter
+  const generatePaymentLink = async (
+    productId,
+    productName,
+    price,
+    provider
+  ) => {
+    // Construct payment link with provider subdomain/spare.example.com
+    const domainMap = {
+      Stripe: "stripe.spare.example.com",
+      Razorpay: "razorpay.spare.example.com",
+      // Add more providers & their subdomains here if needed
+    };
+
+    const baseUrl = domainMap[provider] || "pay.example.com";
+
+    const paymentLink = `https://${baseUrl}/product/${productId}?token=${generateRandomToken()}`;
+
     try {
       await setDoc(doc(db, "paymentLinks", productId), {
         productId,
         productName,
         price,
+        provider,
         link: paymentLink,
         createdAt: serverTimestamp(),
       });
-      alert("Payment link generated successfully!");
+      alert(`Payment link generated successfully for ${provider}!`);
     } catch (error) {
       console.error("Error generating payment link:", error);
       alert("Failed to generate payment link.");
@@ -84,22 +107,28 @@ export default function ProductCatalog() {
     <div>
       <h2>Product Catalog</h2>
       <form onSubmit={handleAddProduct}>
-        <label>Product Name:</label><br />
+        <label>Product Name:</label>
+        <br />
         <input
           value={productName}
           onChange={(e) => setProductName(e.target.value)}
           required
-        /><br />
+        />
+        <br />
 
-        <label>Price:</label><br />
+        <label>Price:</label>
+        <br />
         <input
           type="text"
           value={price}
           onChange={(e) => setPrice(e.target.value)}
           required
-        /><br />
+        />
+        <br />
 
-        <button type="submit" style={{ marginTop: 10 }}>Add Product</button>
+        <button type="submit" style={{ marginTop: 10 }}>
+          Add Product
+        </button>
       </form>
       {message && <p>{message}</p>}
 
@@ -108,11 +137,33 @@ export default function ProductCatalog() {
         {products.length === 0 ? (
           <li>No products found.</li>
         ) : (
-          products.map(p => (
+          products.map((p) => (
             <li key={p.id}>
               {p.productName} - ₹{p.price}{" "}
+              {/* New: Dropdown for selecting payment provider per product */}
+              <select
+                value={selectedProviders[p.id] || "Stripe"}
+                onChange={(e) =>
+                  setSelectedProviders((prev) => ({
+                    ...prev,
+                    [p.id]: e.target.value,
+                  }))
+                }
+                style={{ marginLeft: "10px" }}
+              >
+                <option value="Stripe">Stripe</option>
+                <option value="Razorpay">Razorpay</option>
+              </select>
+
               <button
-                onClick={() => generatePaymentLink(p.id, p.productName, p.price)}
+                onClick={() =>
+                  generatePaymentLink(
+                    p.id,
+                    p.productName,
+                    p.price,
+                    selectedProviders[p.id] || "Stripe"
+                  )
+                }
                 style={{ marginLeft: "10px" }}
               >
                 Generate Payment Link

@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { collection, addDoc, getDocs } from "firebase/firestore";
+import { collection, addDoc, getDocs, updateDoc, doc } from "firebase/firestore";
 import { db } from "../../firebaseConfig";
 
 export default function AddPaymentIntegrationForm() {
   const [gatewayName, setGatewayName] = useState("");
   const [enabled, setEnabled] = useState(false);
   const [apiKey, setApiKey] = useState("");
+  const [secretKey, setSecretKey] = useState(""); // ✅ Added
   const [message, setMessage] = useState("");
   const [integrationList, setIntegrationList] = useState([]);
 
@@ -27,15 +28,26 @@ export default function AddPaymentIntegrationForm() {
         gatewayName,
         enabled,
         apiKey,
+        secretKey, // ✅ Added
       });
       setMessage("Payment Integration added successfully!");
       setGatewayName("");
       setEnabled(false);
       setApiKey("");
+      setSecretKey(""); // ✅ Reset
       fetchIntegrations(); // Refresh list
     } catch (e) {
       setMessage("Error: " + e.message);
     }
+  };
+
+  // ✅ Toggle enabled status
+  const toggleIntegrationStatus = async (id, currentStatus) => {
+    const integrationRef = doc(db, "paymentIntegrations", id);
+    await updateDoc(integrationRef, {
+      enabled: !currentStatus
+    });
+    fetchIntegrations();
   };
 
   return (
@@ -64,6 +76,13 @@ export default function AddPaymentIntegrationForm() {
           required
         /><br />
 
+        <label>Secret Key:</label><br />
+        <input
+          value={secretKey}
+          onChange={(e) => setSecretKey(e.target.value)}
+          required
+        /><br />
+
         <button type="submit" style={{ marginTop: 10 }}>Add Payment Integration</button>
         {message && <p>{message}</p>}
       </form>
@@ -73,13 +92,32 @@ export default function AddPaymentIntegrationForm() {
       {integrationList.length === 0 ? (
         <p>No integrations found.</p>
       ) : (
-        <ul>
-          {integrationList.map((integration) => (
-            <li key={integration.id}>
-              <strong>{integration.gatewayName}</strong> – API Key: {integration.apiKey} – Enabled: {integration.enabled ? "Yes" : "No"}
-            </li>
-          ))}
-        </ul>
+        <table border="1" cellPadding="8" cellSpacing="0">
+          <thead>
+            <tr>
+              <th>Gateway Name</th>
+              <th>API Key</th>
+              <th>Secret Key</th>
+              <th>Enabled</th>
+            </tr>
+          </thead>
+          <tbody>
+            {integrationList.map((integration) => (
+              <tr key={integration.id}>
+                <td>{integration.gatewayName}</td>
+                <td>{integration.apiKey}</td>
+                <td>{integration.secretKey ? integration.secretKey.slice(0, 4) + '****' : 'N/A'}</td>
+                <td>
+                  <input
+                    type="checkbox"
+                    checked={integration.enabled}
+                    onChange={() => toggleIntegrationStatus(integration.id, integration.enabled)}
+                  />
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       )}
     </div>
   );
