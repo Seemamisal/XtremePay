@@ -20,7 +20,10 @@ import AddTransactionForm from '../../components/dashboard/AddTransactionForm';
 import AddPaymentIntegrationForm from '../../components/dashboard/AddPaymentIntegrationForm';
 import ProductCatalog from '../../components/product/ProductCatalog';
 import PaymentLinks from '../../components/payments/PaymentLinks';
+import ProfileInfo from '../../components/dashboard/ProfileInfo';
 
+
+ 
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState('invoice');
   const [invoices, setInvoices] = useState([]);
@@ -179,10 +182,40 @@ export default function Dashboard() {
           {activeTab === 'payment' && <AddPaymentIntegrationForm />}
           {activeTab === 'product' && <ProductCatalog />}
           {activeTab === 'paymentlinks' && <PaymentLinks />}
+            {activeTab === 'profile' && <ProfileInfo />}
+          {/* {activeTab==='settings' && <SettingInfo/>} */}
         </div>
+
+
+
+ 
+
+
       </main>
 
       <style jsx>{`
+
+
+
+  .profile-container {
+          max-width: 800px;
+          margin: 2rem auto;
+          padding: 2rem;
+          background: #ffffff;
+          border-radius: 12px;
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        /* Add this new style for actions */
+        .profile-actions {
+          display: flex;
+          justify-content: flex-end;
+          margin-top: 2rem;
+          padding-top: 1rem;
+          border-top: 1px solid #f0f0f0;
+        }
+
+
         .dashboard-container {
           display: flex;
           min-height: 100vh;
