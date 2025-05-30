@@ -21,6 +21,7 @@ import AddPaymentIntegrationForm from '../../components/dashboard/AddPaymentInte
 import ProductCatalog from '../../components/product/ProductCatalog';
 import PaymentLinks from '../../components/payments/PaymentLinks';
 import ProfileInfo from '../../components/dashboard/ProfileInfo';
+import SettingsScreen from '../../components/dashboard/SettingsScreen';
 
 
  
@@ -183,7 +184,7 @@ export default function Dashboard() {
           {activeTab === 'product' && <ProductCatalog />}
           {activeTab === 'paymentlinks' && <PaymentLinks />}
             {activeTab === 'profile' && <ProfileInfo />}
-          {/* {activeTab==='settings' && <SettingInfo/>} */}
+          {activeTab==='settings' && <SettingsScreen/>}
         </div>
 
 
@@ -199,9 +200,9 @@ export default function Dashboard() {
 
   .profile-container {
           max-width: 800px;
-          margin: 2rem auto;
+          margin: 2rem auto ;
           padding: 2rem;
-          background: #ffffff;
+           background: #ffff;
           border-radius: 12px;
           box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
         }
