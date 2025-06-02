@@ -1,3 +1,7 @@
+ 
+
+
+
 import React, { useEffect, useState } from 'react';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { getAuth, signOut } from 'firebase/auth';
@@ -15,6 +19,7 @@ import {
   FaBars,
   FaTimes,
   FaDochub,
+  FaUserCog,
 } from 'react-icons/fa';
 import AddInvoiceForm from '../../components/dashboard/AddInvoiceForm';
 import AddTransactionForm from '../../components/dashboard/AddTransactionForm';
@@ -23,11 +28,10 @@ import ProductCatalog from '../../components/product/ProductCatalog';
 import PaymentLinks from '../../components/payments/PaymentLinks';
 import ProfileInfo from '../../components/dashboard/ProfileInfo';
 import SettingsScreen from '../../components/dashboard/SettingsScreen';
-import AddDocuments from '../../components/dashboard/DocumentUpload';
 import DocumentUpload from '../../components/dashboard/DocumentUpload';
+import AdminOnboardingReview from '../../components/onboarding/AdminOnboardingReview';
+import { FaCircleArrowRight } from 'react-icons/fa6';
 
-
- 
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState('invoice');
   const [invoices, setInvoices] = useState([]);
@@ -86,8 +90,9 @@ export default function Dashboard() {
 
   const secondaryLinks = [
     { id: 'profile', icon: <FaUser />, label: 'Profile' },
-        { id: 'onboardingDocument', icon: <FaDochub />, label: 'Document' },
-    { id: 'settings', icon: <FaCog />, label: 'Settings' },
+    { id: 'onboardingDocument', icon: <FaDochub />, label: 'Onboarding Process' },
+    { id: 'adminPanel', icon: <FaUserCog/>, label: 'Admin Panel' },
+     { id: 'settings', icon: <FaCog />, label: 'Settings' },
     { id: 'logout', icon: <FaSignOutAlt />, label: 'Logout' },
   ];
 
@@ -187,72 +192,62 @@ export default function Dashboard() {
           {activeTab === 'payment' && <AddPaymentIntegrationForm />}
           {activeTab === 'product' && <ProductCatalog />}
           {activeTab === 'paymentlinks' && <PaymentLinks />}
-            {activeTab === 'profile' && <ProfileInfo />}
-          {activeTab==='settings' && <SettingsScreen/>}
-           {activeTab==='onboardingDocument' && <DocumentUpload/>}
+          {activeTab === 'profile' && <ProfileInfo />}
+          {activeTab === 'adminPanel' && <AdminOnboardingReview />}
+          {activeTab === 'settings' && <SettingsScreen />}
+          {activeTab === 'onboardingDocument' && <DocumentUpload />}
         </div>
-
-
-
- 
-
-
       </main>
 
       <style jsx>{`
-
-
-
-  .profile-container {
-          max-width: 800px;
-          margin: 2rem auto ;
-          padding: 2rem;
-           background: #ffff;
-          border-radius: 12px;
-          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-        }
-
-        /* Add this new style for actions */
-        .profile-actions {
-          display: flex;
-          justify-content: flex-end;
-          margin-top: 2rem;
-          padding-top: 1rem;
-          border-top: 1px solid #f0f0f0;
-        }
-
-
         .dashboard-container {
           display: flex;
           min-height: 100vh;
-          background-color: #0f172a;
-          color: #e2e8f0;
+          background-color: #f5f7fa;
         }
+
+        /* Sidebar Styles */
         .sidebar {
           width: 250px;
-          background-color: #1e293b;
+          background-color: #ffffff;
+          box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
           transition: all 0.3s ease;
           position: relative;
           z-index: 100;
+          border-right: 1px solid #e2e8f0;
         }
+
         .sidebar.collapsed {
           width: 70px;
         }
+
         .sidebar-header {
           display: flex;
           justify-content: space-between;
           align-items: center;
           padding: 20px;
-          border-bottom: 1px solid #334155;
-          color: #f8fafc;
+          border-bottom: 1px solid #e2e8f0;
+          color: #2d3748;
         }
+
+        .sidebar-header h2 {
+          margin: 0;
+          font-size: 1.25rem;
+          font-weight: 600;
+        }
+
         .sidebar-toggle {
           background: none;
           border: none;
-          color: #f1f5f9;
+          color: #4a5568;
           cursor: pointer;
           font-size: 1.2rem;
         }
+
+        .sidebar-nav {
+          padding: 1rem 0;
+        }
+
         .sidebar-nav li {
           padding: 12px 20px;
           cursor: pointer;
@@ -260,101 +255,197 @@ export default function Dashboard() {
           align-items: center;
           gap: 12px;
           transition: background-color 0.2s;
-          color: #f1f5f9;
+          color: #4a5568;
+          font-size: 0.95rem;
         }
+
         .sidebar-nav li:hover {
-          background-color: #334155;
+          background-color: #f0f4f8;
         }
+
         .sidebar-nav li.active {
-          background-color: #2563eb;
+          background-color: #ebf4ff;
+          color: #3182ce;
+          border-left: 3px solid #3182ce;
         }
+
+        .sidebar-nav li.active .icon {
+          color: #3182ce;
+        }
+
+  
+
+        .icon {
+          font-size: 1rem;
+          color: #718096;
+        }
+
+        .label {
+          white-space: nowrap;
+        }
+
+        /* Main Content Styles */
         .main-content {
           flex: 1;
-          padding: 20px;
+          padding: 2rem;
+          background-color: #f5f7fa;
         }
+
+        .content-header {
+          margin-bottom: 2rem;
+        }
+
         .content-header h1 {
-          color: #f8fafc;
+          font-size: 1.75rem;
+          color: #2d3748;
+          margin: 0;
         }
+
+        /* Invoice List Styles */
         .invoice-list-container {
-          background: #1e293b;
+          background: #ffffff;
           border-radius: 8px;
-          padding: 20px;
-          box-shadow: 0 2px 4px rgba(255, 255, 255, 0.05);
+          padding: 2rem;
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
         }
+
+        .invoice-list-container h2 {
+          font-size: 1.25rem;
+          color: #2d3748;
+          margin-bottom: 1.5rem;
+        }
+
         .invoice-list-header, .invoice-item {
           display: grid;
           grid-template-columns: 1fr 1fr 1fr 1fr;
-          padding: 12px 0;
-          border-bottom: 1px solid #334155;
-          color: #f8fafc;
+          padding: 1rem 0;
+          border-bottom: 1px solid #e2e8f0;
+          color: #4a5568;
         }
+
+        .invoice-list-header {
+          font-weight: 600;
+          color: #2d3748;
+          border-bottom: 2px solid #e2e8f0;
+        }
+
         .invoice-item:hover {
-          background-color: #334155;
+          background-color: #f8fafc;
         }
+
         .status {
-          padding: 4px 8px;
+          padding: 0.25rem 0.75rem;
           border-radius: 12px;
           font-size: 0.8rem;
           font-weight: 500;
           text-align: center;
           width: fit-content;
         }
+
         .status.paid {
-          background-color: #064e3b;
-          color: #34d399;
+          background-color: #f0fff4;
+          color: #38a169;
         }
+
         .status.pending {
-          background-color: #78350f;
-          color: #fbbf24;
+          background-color: #fffaf0;
+          color: #dd6b20;
         }
+
         .status.overdue {
-          background-color: #7f1d1d;
-          color: #f87171;
+          background-color: #fff5f5;
+          color: #e53e3e;
         }
+
+        /* Loading and Error States */
         .loading, .error, .empty-state {
-          padding: 20px;
+          padding: 2rem;
           text-align: center;
-          color: #f1f5f9;
+          color: #718096;
+          background: #ffffff;
+          border-radius: 8px;
+          margin-top: 1rem;
         }
+
         .error {
-          background-color: #7f1d1d;
-          border-radius: 4px;
+          background-color: #fff5f5;
+          color: #e53e3e;
         }
+
+        /* Mobile Styles */
         .mobile-sidebar-toggle {
           display: none;
           position: fixed;
-          top: 10px;
-          left: 10px;
+          top: 20px;
+          left: 20px;
           z-index: 1000;
-          background: #1e293b;
-          color: white;
-          border: none;
-          border-radius: 4px;
+          background: #ffffff;
+          color: #4a5568;
+          border: 1px solid #e2e8f0;
+          border-radius: 6px;
           padding: 10px;
           cursor: pointer;
+          box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         }
-        @media (max-width: 768px) {
+
+        @media (max-width: 600px) {
           .sidebar {
             position: fixed;
+            
             left: -250px;
             height: 100vh;
+            z-index: 999;
           }
+
           .sidebar.mobile-open {
             left: 0;
           }
+
           .sidebar.collapsed {
             left: -70px;
           }
+
           .mobile-sidebar-toggle {
             display: block;
           }
+
           .main-content {
-            margin-left: 0 !important;
+            padding: 1.5rem;
           }
+
           .invoice-list-header, .invoice-item {
             grid-template-columns: 1fr 1fr;
+            gap: 0.5rem;
+          }
+
+          .invoice-list-container {
+            padding: 1.5rem;
           }
         }
+
+        /* Profile Container */
+        .profile-container {
+          max-width: 800px;
+          margin: 0 auto;
+          padding: 2rem;
+          background: #ffffff;
+          border-radius: 12px;
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .profile-actions {
+          display: flex;
+          justify-content: flex-end;
+          margin-top: 2rem;
+          padding-top: 1rem;
+          border-top: 1px solid #f0f4f8;
+        }
+
+ .content-header h1 {
+        display:none;
+         }
+
+
       `}</style>
     </div>
   );
