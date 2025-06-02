@@ -295,7 +295,7 @@ const DocumentUpload = ({ userId }) => {
         }
 
         .submit-btn:disabled {
-          background: #cbd5e0;
+          background:rgb(8, 3, 24);
           cursor: not-allowed;
         }
       `}</style>
