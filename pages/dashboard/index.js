@@ -14,6 +14,7 @@ import {
   FaSignOutAlt,
   FaBars,
   FaTimes,
+  FaDochub,
 } from 'react-icons/fa';
 import AddInvoiceForm from '../../components/dashboard/AddInvoiceForm';
 import AddTransactionForm from '../../components/dashboard/AddTransactionForm';
@@ -22,6 +23,8 @@ import ProductCatalog from '../../components/product/ProductCatalog';
 import PaymentLinks from '../../components/payments/PaymentLinks';
 import ProfileInfo from '../../components/dashboard/ProfileInfo';
 import SettingsScreen from '../../components/dashboard/SettingsScreen';
+import AddDocuments from '../../components/dashboard/DocumentUpload';
+import DocumentUpload from '../../components/dashboard/DocumentUpload';
 
 
  
@@ -83,6 +86,7 @@ export default function Dashboard() {
 
   const secondaryLinks = [
     { id: 'profile', icon: <FaUser />, label: 'Profile' },
+        { id: 'onboardingDocument', icon: <FaDochub />, label: 'Document' },
     { id: 'settings', icon: <FaCog />, label: 'Settings' },
     { id: 'logout', icon: <FaSignOutAlt />, label: 'Logout' },
   ];
@@ -185,6 +189,7 @@ export default function Dashboard() {
           {activeTab === 'paymentlinks' && <PaymentLinks />}
             {activeTab === 'profile' && <ProfileInfo />}
           {activeTab==='settings' && <SettingsScreen/>}
+           {activeTab==='onboardingDocument' && <DocumentUpload/>}
         </div>
 
 
