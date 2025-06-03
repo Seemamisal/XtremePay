@@ -81,7 +81,7 @@ export default function PaymentLinks() {
 
       <style jsx>{`
         .payment-links-container {
-          max-width: 1200px;
+          max-width: 900px;
           margin: 0 auto;
           padding: 2rem;
         }

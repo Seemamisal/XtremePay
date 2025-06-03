@@ -219,6 +219,8 @@ export default function AddTransactionForm() {
           display: flex;
           flex-direction: column;
           gap: 2rem;
+          max-width: 900px;
+         margin: 0 auto ;
         }
 
         .form-section, .list-section {

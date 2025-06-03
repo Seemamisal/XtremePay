@@ -207,8 +207,8 @@ const ProfileInfo = () => {
 
       <style jsx>{`
         .profile-container {
-          max-width: 800px;
-          margin: 2rem auto;
+          max-width: 900px;
+          margin: 0 auto;
           padding: 2rem;
           background: #ffffff;
           border-radius: 12px;

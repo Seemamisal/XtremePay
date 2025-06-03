@@ -1,334 +1,272 @@
-import React, { useState, useEffect } from 'react';
-import { collection, getDocs, doc, updateDoc } from 'firebase/firestore';
+ 
+
+
+
+import React, { useState } from 'react';
+import { collection, addDoc } from 'firebase/firestore';
 import { db } from '../../firebaseConfig';
-import { FiCheck, FiX, FiDownload, FiUser } from 'react-icons/fi';
 
-const AdminOnboardingReview = () => {
-  const [onboardings, setOnboardings] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [selectedUser, setSelectedUser] = useState(null);
+const AdminOnboarding = () => {
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    userType: 'Vendor' // Default to Vendor
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
 
-  useEffect(() => {
-    const fetchPendingOnboardings = async () => {
-      try {
-        const querySnapshot = await getDocs(
-          collection(db, 'onboardings'), 
-          where('status', '==', 'pending_review')
-        );
-        const onboardingsList = querySnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        }));
-        setOnboardings(onboardingsList);
-      } catch (error) {
-        console.error('Error fetching onboardings:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
 
-    fetchPendingOnboardings();
-  }, []);
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
 
-  const completeOnboarding = async (userId, approved) => {
     try {
-      const onboardingRef = doc(db, 'onboardings', userId);
-      await updateDoc(onboardingRef, {
-        status: approved ? 'approved' : 'rejected',
-        reviewedAt: new Date()
+      // Add the onboarding data to Firestore
+      await addDoc(collection(db, 'onboardings'), {
+        ...formData,
+        status: 'pending',
+        createdAt: new Date(),
+        initiatedBy: 'admin'
       });
 
-      // Call admin API (mock implementation)
-      await fetch('/api/admin/complete-onboarding', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          userId,
-          status: approved ? 'approved' : 'rejected'
-        })
+      setSuccessMessage('Onboarding initiated successfully!');
+      // Reset form
+      setFormData({
+        name: '',
+        email: '',
+        phone: '',
+        userType: 'Vendor'
       });
 
-      setOnboardings(prev => prev.filter(item => item.id !== userId));
-      alert(`Onboarding ${approved ? 'approved' : 'rejected'} successfully!`);
+      // Clear success message after 3 seconds
+      setTimeout(() => setSuccessMessage(''), 3000);
     } catch (error) {
-      console.error('Error updating onboarding:', error);
-      alert('Failed to update onboarding status.');
+      console.error('Error submitting onboarding:', error);
+      alert('Error initiating onboarding. Please try again.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  const documentTypes = [
-    { id: 'id_proof', label: 'ID Proof' },
-    { id: 'address_proof', label: 'Address Proof' },
-    { id: 'pan_card', label: 'PAN Card' },
-    { id: 'bank_statement', label: 'Bank Statement' },
-  ];
-
-  if (loading) {
-    return <div className="loading-spinner">Loading...</div>;
-  }
-
   return (
-    <div className="admin-container">
-      <h2 className="admin-title">Pending Onboarding Reviews</h2>
-      
-      {onboardings.length === 0 ? (
-        <p className="empty-state">No pending onboardings to review.</p>
-      ) : (
-        <div className="onboarding-list">
-          {onboardings.map(onboarding => (
-            <div 
-              key={onboarding.id} 
-              className={`onboarding-item ${selectedUser === onboarding.id ? 'selected' : ''}`}
-              onClick={() => setSelectedUser(onboarding.id)}
-            >
-              <div className="user-header">
-                <FiUser className="user-icon" />
-                <span className="user-id">{onboarding.userId}</span>
-                <span className="date">
-                  Submitted: {new Date(onboarding.createdAt).toLocaleDateString()}
-                </span>
-              </div>
+    <div className="admin-onboarding-container">
+      <h1 className="page-title">Admin Onboarding</h1>
+      <p className="page-description">Initiate new user onboarding process</p>
 
-              {selectedUser === onboarding.id && (
-                <div className="documents-container">
-                  <h3 className="documents-title">Uploaded Documents</h3>
-                  <div className="documents-grid">
-                    {documentTypes.map(docType => (
-                      <div key={docType.id} className="document-card">
-                        <h4 className="document-type">{docType.label}</h4>
-                        {onboarding.documents[docType.id] ? (
-                          <>
-                            {onboarding.documents[docType.id].includes('.pdf') ? (
-                              <div className="pdf-preview">
-                                <FiFile className="file-icon" />
-                                <a 
-                                  href={onboarding.documents[docType.id]} 
-                                  target="_blank" 
-                                  rel="noopener noreferrer"
-                                  className="download-link"
-                                >
-                                  <FiDownload /> Download
-                                </a>
-                              </div>
-                            ) : (
-                              <img 
-                                src={onboarding.documents[docType.id]} 
-                                alt={docType.label} 
-                                className="document-image"
-                              />
-                            )}
-                          </>
-                        ) : (
-                          <div className="missing-doc">Not Provided</div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="action-buttons">
-                    <button 
-                      onClick={() => completeOnboarding(onboarding.id, false)}
-                      className="reject-btn"
-                    >
-                      <FiX /> Reject
-                    </button>
-                    <button 
-                      onClick={() => completeOnboarding(onboarding.id, true)}
-                      className="approve-btn"
-                    >
-                      <FiCheck /> Approve
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          ))}
+      <form onSubmit={handleSubmit} className="onboarding-form">
+        <div className="form-group">
+          <label className="form-label">
+            Full Name *
+          </label>
+          <input
+            type="text"
+            name="name"
+            value={formData.name}
+            onChange={handleChange}
+            className="form-input"
+            placeholder="Enter user's full name"
+            required
+          />
         </div>
-      )}
+
+        <div className="form-group">
+          <label className="form-label">
+            Email *
+          </label>
+          <input
+            type="email"
+            name="email"
+            value={formData.email}
+            onChange={handleChange}
+            className="form-input"
+            placeholder="Enter user's email address"
+            required
+          />
+        </div>
+
+        <div className="form-group">
+          <label className="form-label">
+            Phone Number *
+          </label>
+          <input
+            type="tel"
+            name="phone"
+            value={formData.phone}
+            onChange={handleChange}
+            className="form-input"
+            placeholder="Enter user's phone number"
+            required
+          />
+        </div>
+
+        <div className="form-group">
+          <label className="form-label">
+            User Type *
+          </label>
+          <div className="radio-group">
+            <label className="radio-option">
+              <input
+                type="radio"
+                name="userType"
+                value="Vendor"
+                checked={formData.userType === 'Vendor'}
+                onChange={handleChange}
+                required
+              />
+              <span className="radio-label">Vendor</span>
+            </label>
+            <label className="radio-option">
+              <input
+                type="radio"
+                name="userType"
+                value="Sales"
+                checked={formData.userType === 'Sales'}
+                onChange={handleChange}
+              />
+              <span className="radio-label">Sales</span>
+            </label>
+          </div>
+        </div>
+
+        <button
+          type="submit"
+          className="submit-btn"
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? 'Processing...' : 'Start Onboarding'}
+        </button>
+
+        {successMessage && (
+          <div className="success-message">
+            {successMessage}
+          </div>
+        )}
+      </form>
 
       <style jsx>{`
-        .admin-container {
-          max-width: 1200px;
+        .admin-onboarding-container {
+          max-width: 900px;
           margin: 0 auto;
           padding: 2rem;
-        }
-
-        .admin-title {
-          font-size: 1.5rem;
-          color: #2d3748;
-          margin-bottom: 1.5rem;
-        }
-
-        .loading-spinner {
-          text-align: center;
-          padding: 2rem;
-          color: #718096;
-        }
-
-        .empty-state {
-          padding: 2rem;
-          text-align: center;
-          color: #718096;
-          background: #f7fafc;
-          border-radius: 8px;
-        }
-
-        .onboarding-list {
-          display: flex;
-          flex-direction: column;
-          gap: 1rem;
-        }
-
-        .onboarding-item {
           background: #fff;
-          border: 1px solid #e2e8f0;
           border-radius: 8px;
-          padding: 1rem;
-          cursor: pointer;
-          transition: all 0.2s;
+          box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         }
 
-        .onboarding-item:hover {
-          border-color: #cbd5e0;
+        .page-title {
+          font-size: 1.8rem;
+          color: #2d3748;
+          margin-bottom: 0.5rem;
         }
 
-        .onboarding-item.selected {
-          border-color: #4299e1;
-          box-shadow: 0 0 0 1px #4299e1;
-        }
-
-        .user-header {
-          display: flex;
-          align-items: center;
-          gap: 0.75rem;
-        }
-
-        .user-icon {
+        .page-description {
           color: #718096;
+          margin-bottom: 2rem;
         }
 
-        .user-id {
-          font-weight: 500;
-          flex-grow: 1;
-        }
-
-        .date {
-          color: #718096;
-          font-size: 0.875rem;
-        }
-
-        .documents-container {
-          margin-top: 1rem;
-          padding-top: 1rem;
-          border-top: 1px solid #f0f4f8;
-        }
-
-        .documents-title {
-          font-size: 1.125rem;
-          color: #4a5568;
-          margin-bottom: 1rem;
-        }
-
-        .documents-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-          gap: 1.5rem;
-          margin-bottom: 1.5rem;
-        }
-
-        .document-card {
-          background: #f7fafc;
-          border-radius: 6px;
-          padding: 1rem;
-        }
-
-        .document-type {
-          font-size: 0.875rem;
-          color: #4a5568;
-          margin-bottom: 0.75rem;
-          font-weight: 500;
-        }
-
-        .document-image {
-          max-width: 100%;
-          max-height: 200px;
-          border: 1px solid #e2e8f0;
-          border-radius: 4px;
-        }
-
-        .pdf-preview {
+        .onboarding-form {
           display: flex;
           flex-direction: column;
-          align-items: center;
-          gap: 0.5rem;
-          padding: 1rem;
+          gap: 1.5rem;
         }
 
-        .file-icon {
-          font-size: 2rem;
+        .form-group {
+          display: flex;
+          flex-direction: column;
+          gap: 0.5rem;
+        }
+           .required {
           color: #e53e3e;
+          margin-left: 0.25rem;
         }
 
-        .download-link {
+        .form-label {
+          font-weight: 500;
+          color: #4a5568;
+        }
+
+        .form-input {
+          padding: 0.75rem 1rem;
+          border: 1px solid #e2e8f0;
+          border-radius: 6px;
+          font-size: 1rem;
+          transition: border 0.2s;
+          background-color: white;
+         color:black
+        }
+
+        .form-input:focus {
+          outline: none;
+          border-color: #4299e1;
+ 
+          box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.2);
+        }
+
+        .radio-group {
+          display: flex;
+          gap: 1.5rem;
+          margin-top: 0.5rem;
+        }
+
+        .radio-option {
           display: flex;
           align-items: center;
           gap: 0.5rem;
-          color: #4299e1;
-          text-decoration: none;
+          cursor: pointer;
+          }
+
+        .radio-label {
+          color: #4a5568;
         }
 
-        .download-link:hover {
-          text-decoration: underline;
-        }
-
-        .missing-doc {
-          color: #e53e3e;
-          font-size: 0.875rem;
-          font-style: italic;
-        }
-
-        .action-buttons {
-          display: flex;
-          justify-content: flex-end;
-          gap: 1rem;
-          margin-top: 1.5rem;
-        }
-
-        .approve-btn, .reject-btn {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          padding: 0.5rem 1rem;
+        .submit-btn {
+          padding: 0.75rem 1.5rem;
+          background: #4299e1;
+          color: white;
           border: none;
           border-radius: 6px;
           font-weight: 500;
           cursor: pointer;
-          transition: all 0.2s;
+          transition: background 0.2s;
+          margin-top: 1rem;
+          align-self: flex-start;
         }
 
-        .approve-btn {
-          background: #38a169;
-          color: white;
+        .submit-btn:hover {
+          background: #3182ce;
         }
 
-        .approve-btn:hover {
-          background: #2f855a;
+        .submit-btn:disabled {
+          background: #a0aec0;
+          cursor: not-allowed;
         }
 
-        .reject-btn {
-          background: #fff5f5;
-          color: #e53e3e;
-          border: 1px solid #fed7d7;
+        .success-message {
+          margin-top: 1rem;
+          padding: 0.75rem;
+          background: #f0fff4;
+          color: #38a169;
+          border-radius: 6px;
+          border: 1px solid #c6f6d5;
         }
 
-        .reject-btn:hover {
-          background: #fed7d7;
+        @media (max-width: 600px) {
+          .admin-onboarding-container {
+            padding: 1.5rem;
+            margin: 1rem;
+          }
         }
       `}</style>
     </div>
   );
 };
 
-export default AdminOnboardingReview;
+export default AdminOnboarding;

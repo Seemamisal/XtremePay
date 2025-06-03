@@ -235,6 +235,8 @@ export default function AddPaymentIntegrationForm() {
           display: flex;
           flex-direction: column;
           gap: 2rem;
+          max-width:900px;
+          margin: 0 auto;
         }
 
         .form-section,
