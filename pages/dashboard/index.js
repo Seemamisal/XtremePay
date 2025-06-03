@@ -31,6 +31,7 @@ import SettingsScreen from '../../components/dashboard/SettingsScreen';
 import DocumentUpload from '../../components/dashboard/DocumentUpload';
 import AdminOnboardingReview from '../../components/onboarding/AdminOnboardingReview';
 import { FaCircleArrowRight } from 'react-icons/fa6';
+import TrackOnboardingProgress  from '../admin/TrackOnboardingProgress';
 
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState('invoice');
@@ -90,8 +91,9 @@ export default function Dashboard() {
 
   const secondaryLinks = [
     { id: 'profile', icon: <FaUser />, label: 'Profile' },
-    { id: 'onboardingDocument', icon: <FaDochub />, label: 'Onboarding Process' },
     { id: 'adminPanel', icon: <FaUserCog/>, label: 'Admin Panel' },
+    { id: 'onboardingDocument', icon: <FaDochub />, label: 'Onboarding Process' },
+    {id : 'TrackOnboardingProgress', icon: <FaCircleArrowRight/>, label: 'Track Onboading Progress'},
      { id: 'settings', icon: <FaCog />, label: 'Settings' },
     { id: 'logout', icon: <FaSignOutAlt />, label: 'Logout' },
   ];
@@ -194,8 +196,9 @@ export default function Dashboard() {
           {activeTab === 'paymentlinks' && <PaymentLinks />}
           {activeTab === 'profile' && <ProfileInfo />}
           {activeTab === 'adminPanel' && <AdminOnboardingReview />}
-          {activeTab === 'settings' && <SettingsScreen />}
           {activeTab === 'onboardingDocument' && <DocumentUpload />}
+          {activeTab === 'TrackOnboardingProgress' && <TrackOnboardingProgress/>}
+          {activeTab === 'settings' && <SettingsScreen />}
         </div>
       </main>
 
