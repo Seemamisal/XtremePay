@@ -136,6 +136,8 @@ export default function AddInvoiceForm() {
           background:rgb(255, 255, 255);
           border-radius: 12px;
           padding: 2rem;
+          max-width:900px;
+          margin: 0 auto;
           box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
           margin-bottom: 2rem;
         }
@@ -161,6 +163,8 @@ export default function AddInvoiceForm() {
           display: flex;
           flex-direction: column;
           gap: 1.25rem;
+           max-width:900px;
+          margin: 0 auto;
         }
 
         .form-group {
