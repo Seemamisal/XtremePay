@@ -1,8 +1,5 @@
- 
-
-
-import React, { useState } from 'react';
-import { doc, setDoc, collection } from 'firebase/firestore';
+import React, { useState, useEffect } from 'react';
+import { doc, getDoc, setDoc, collection } from 'firebase/firestore';
 import { db } from '../../firebaseConfig';
 
 const DocumentUpload = ({ userId }) => {
@@ -19,6 +16,40 @@ const DocumentUpload = ({ userId }) => {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isAgreed, setIsAgreed] = useState(false);
+  const [onboardingId, setOnboardingId] = useState('');
+
+  useEffect(() => {
+    // Get the onboarding ID from localStorage
+    const id = localStorage.getItem('currentOnboardingId');
+    if (id) {
+      setOnboardingId(id);
+      fetchAdminData(id);
+    }
+  }, []);
+
+  const fetchAdminData = async (id) => {
+    try {
+      const docRef = doc(db, 'onboardings', id);
+      const docSnap = await getDoc(docRef);
+      
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        setFormData({
+          personal: {
+            name: data.name || '',
+            email: data.email || '',
+            address: '',
+            phone: data.phone || ''
+          },
+          business: {
+            tradeLicense: ''
+          }
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching admin data:', error);
+    }
+  };
 
   const handleChange = (e, section, field) => {
     setFormData(prev => ({
@@ -41,24 +72,22 @@ const DocumentUpload = ({ userId }) => {
     setIsSubmitting(true);
 
     try {
-      console.log('Submitting data:', formData);
-      
-      const onboardingRef = doc(collection(db, 'onboardings'), userId);
+      if (!onboardingId) {
+        throw new Error('No onboarding process found');
+      }
+
+      const onboardingRef = doc(db, 'onboardings', onboardingId);
       await setDoc(onboardingRef, {
-        userId,
         ...formData,
         status: 'pending_review',
-        createdAt: new Date()
+        updatedAt: new Date(),
+        step: 'user_completed'
       }, { merge: true });
 
       alert('Details submitted successfully! Awaiting admin approval.');
+      localStorage.removeItem('currentOnboardingId');
     } catch (error) {
       console.error('Full error:', error);
-      console.error('Error details:', {
-        message: error.message,
-        code: error.code,
-        stack: error.stack
-      });
       alert('Error submitting details. Please try again.');
     } finally {
       setIsSubmitting(false);

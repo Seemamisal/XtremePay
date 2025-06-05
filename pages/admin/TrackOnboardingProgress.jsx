@@ -1,25 +1,29 @@
 import React, { useState, useEffect } from 'react';
-import { collection, getDocs, updateDoc, doc } from 'firebase/firestore';
+import { collection, getDocs, updateDoc, doc, query, orderBy } from 'firebase/firestore';
 import { db } from '../../firebaseConfig';
-import { useRouter } from 'next/router'; // For Next.js
-import { useNavigate } from 'react-router-dom'; // For React Router
+import { useRouter } from 'next/router';
 
 const TrackOnboardingProgress = () => {
   const [onboardings, setOnboardings] = useState([]);
   const [successMessage, setSuccessMessage] = useState('');
   const [isLoading, setIsLoading] = useState(true);
 
-  // For Next.js:
   const router = useRouter();
-  // For React Router: const navigate = useNavigate();
 
   useEffect(() => {
     const fetchOnboardings = async () => {
       try {
-        const querySnapshot = await getDocs(collection(db, 'onboardings'));
+        const q = query(
+          collection(db, 'onboardings'),
+          orderBy('createdAt', 'desc')
+        );
+        const querySnapshot = await getDocs(q);
         const onboardingsData = querySnapshot.docs.map(doc => ({
           id: doc.id,
-          ...doc.data()
+          ...doc.data(),
+          // Convert Firestore timestamp to JS Date
+          createdAt: doc.data().createdAt?.toDate(),
+          updatedAt: doc.data().updatedAt?.toDate()
         }));
         setOnboardings(onboardingsData);
       } catch (error) {
@@ -36,7 +40,8 @@ const TrackOnboardingProgress = () => {
     try {
       await updateDoc(doc(db, 'onboardings', id), {
         status: 'approved',
-        updatedAt: new Date()
+        updatedAt: new Date(),
+        step: 'admin_reviewed'
       });
 
       setOnboardings(prev =>
@@ -56,7 +61,8 @@ const TrackOnboardingProgress = () => {
     try {
       await updateDoc(doc(db, 'onboardings', id), {
         status: 'rejected',
-        updatedAt: new Date()
+        updatedAt: new Date(),
+        step: 'admin_reviewed'
       });
 
       setOnboardings(prev =>
@@ -73,9 +79,12 @@ const TrackOnboardingProgress = () => {
   };
 
   const goBack = () => {
-    // For Next.js:
     router.push('/admin/onboarding');
-    // For React Router: navigate('/admin/onboarding');
+  };
+
+  const formatDate = (date) => {
+    if (!date) return '';
+    return date.toLocaleString();
   };
 
   return (
@@ -114,12 +123,30 @@ const TrackOnboardingProgress = () => {
                   <span className="detail-label">Type:</span>
                   <span>{item.userType}</span>
                 </div>
+                {item.personal?.address && (
+                  <div className="detail">
+                    <span className="detail-label">Address:</span>
+                    <span>{item.personal.address}</span>
+                  </div>
+                )}
+                {item.business?.tradeLicense && (
+                  <div className="detail">
+                    <span className="detail-label">Trade License:</span>
+                    <span>{item.business.tradeLicense}</span>
+                  </div>
+                )}
                 <div className="detail">
                   <span className="detail-label">Created:</span>
-                  <span>{item.createdAt?.toDate().toLocaleString()}</span>
+                  <span>{formatDate(item.createdAt)}</span>
                 </div>
+                {item.updatedAt && (
+                  <div className="detail">
+                    <span className="detail-label">Updated:</span>
+                    <span>{formatDate(item.updatedAt)}</span>
+                  </div>
+                )}
               </div>
-              {item.status === 'pending' && (
+              {item.status === 'pending_review' && (
                 <div className="item-actions">
                   <button
                     className="approve-btn"
@@ -146,7 +173,8 @@ const TrackOnboardingProgress = () => {
         </div>
       )}
 
-      <style jsx>{`
+
+ <style jsx>{`
         .tracking-container {
           max-width: 1000px;
           margin: 0 auto;
@@ -349,6 +377,8 @@ const TrackOnboardingProgress = () => {
         }
       `}</style>
     </div>
+
+    
   );
 };
 

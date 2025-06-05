@@ -3,13 +3,11 @@
 
 
 
-
 import React, { useState } from 'react';
 import { collection, addDoc } from 'firebase/firestore';
 import { db } from '../../firebaseConfig';
-import { useRouter } from 'next/router'; // For Next.js
-// import { useNavigate } from 'react-router-dom'; // For React Router
-// import TrackOnboardingProgress from './TrackOnboardingProgress';
+import { useRouter } from 'next/router';
+
 const AdminOnboarding = () => {
   const [formData, setFormData] = useState({
     name: '',
@@ -20,9 +18,7 @@ const AdminOnboarding = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
 
-  // For Next.js:
   const router = useRouter();
-  // For React Router: const navigate = useNavigate();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -37,20 +33,27 @@ const AdminOnboarding = () => {
     setIsSubmitting(true);
 
     try {
-      await addDoc(collection(db, 'onboardings'), {
+      // Add a new document with generated ID
+      const docRef = await addDoc(collection(db, 'onboardings'), {
         ...formData,
         status: 'pending',
         createdAt: new Date(),
-        initiatedBy: 'admin'
+        initiatedBy: 'admin',
+        step: 'admin_initiated' // Track which step we're at
       });
 
       setSuccessMessage('Onboarding initiated successfully!');
+      
+      // Store the document ID in localStorage for the onboarding process
+      localStorage.setItem('currentOnboardingId', docRef.id);
+      
       setFormData({
         name: '',
         email: '',
         phone: '',
         userType: 'Vendor'
       });
+      
       setTimeout(() => setSuccessMessage(''), 3000);
     } catch (error) {
       console.error('Error submitting onboarding:', error);
@@ -61,13 +64,10 @@ const AdminOnboarding = () => {
   };
 
   const goToTracking = () => {
-    // For Next.js:
-        // router.push('/admin/track-onboarding');
-        router.push('/admin/TrackOnboardingProgress');
-
-    // router.push('/onboarding/TrackOnboarding');
-    // For React Router: navigate('/admin/track-onboarding');
+    router.push('/admin/TrackOnboardingProgress');
   };
+
+
 
   return (
     <div className="admin-onboarding-container">
